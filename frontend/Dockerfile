@@ -1,33 +1,28 @@
 # Multi-stage build for production optimization
 FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-
-# Install ALL dependencies (including dev dependencies needed for build)
 RUN npm install
 
-# Copy source code
 COPY . .
-
-# Build the app (this needs dev dependencies like react-scripts)
 RUN npm run build
 
 # Production stage
 FROM nginx:alpine
 
-# Copy built app from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
-
-# Copy startup script (generates nginx config at runtime)
 COPY start-nginx.sh /start-nginx.sh
-RUN chmod +x /start-nginx.sh
+RUN chmod +x /start-nginx.sh && \
+    mkdir -p /var/cache/nginx /var/log/nginx /var/run /etc/nginx/conf.d && \
+    chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown nginx:nginx /var/run/nginx.pid
 
-# Expose port (Cloud Run will set PORT env var, default to 3000)
+# Run as unprivileged nginx user
+USER nginx
+
 EXPOSE 3000
 
-# Use startup script that handles PORT env var
 CMD ["/start-nginx.sh"]

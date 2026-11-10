@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from app.routers.auth import verify_token
 from app.database import get_db
 from app.models import Product
@@ -15,7 +15,7 @@ class CartItem(BaseModel):
     price: float
     quantity: int
     subtotal: float
-    image_url: str = None
+    image_url: Optional[str] = None
 
 class CartResponse(BaseModel):
     items: List[CartItem]

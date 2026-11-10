@@ -61,10 +61,10 @@ export const AuthProvider = ({ children }) => {
   const signup = async (userData) => {
     try {
       const response = await api.post(endpoints.auth.signup, userData);
-      const { access_token, ...user } = response.data;
+      const { access_token, ...createdUserData } = response.data;
       
       localStorage.setItem('token', access_token);
-      setUser(user);
+      setUser(createdUserData);
       setError(null); // Only clear error on successful signup
       
       return { success: true };

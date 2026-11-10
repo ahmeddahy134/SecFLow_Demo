@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -9,8 +7,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-ecommerce}
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -28,11 +26,9 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-ecommerce}
-      - SECRET_KEY=${SECRET_KEY:-your-super-secret-key-change-in-production}
+      - SECRET_KEY=${SECRET_KEY:-demo-insecure-secret-key-change-in-production}
       - ALGORITHM=${ALGORITHM:-HS256}
-      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
-      - ECOMMERCE_API_URL=${ECOMMERCE_API_URL:-https://api.example.com}
-      - ECOMMERCE_API_KEY=${ECOMMERCE_API_KEY:-your-api-key-here}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
       - DEBUG=${DEBUG:-true}
       - ENVIRONMENT=${ENVIRONMENT:-development}
     depends_on:
@@ -42,9 +38,10 @@ services:
     restart: unless-stopped
     volumes:
       - ./backend:/app
+      - backend_uploads:/app/uploads
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # React Frontend
+  # React Customer Frontend
   frontend:
     build:
       context: ./frontend
@@ -60,9 +57,8 @@ services:
     networks:
       - ecommerce-network
     restart: unless-stopped
-    # Using Nginx-built image; no live bind mounts or npm start
 
-  # Admin Frontend
+  # React Admin Frontend
   admin-frontend:
     build:
       context: ./admin-frontend
@@ -70,14 +66,15 @@ services:
     container_name: ecommerce-admin-frontend
     ports:
       - "5030:5030"
-    # Using Nginx-built image; no runtime env or bind mounts
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000}
     depends_on:
       - backend
     networks:
       - ecommerce-network
     restart: unless-stopped
 
-  # Redis for caching (optional)
+  # Redis Cache Tier (Optional session / cache storage)
   redis:
     image: redis:7-alpine
     container_name: ecommerce-redis
@@ -89,8 +86,8 @@ services:
 
 volumes:
   postgres_data:
+  backend_uploads:
 
 networks:
   ecommerce-network:
     driver: bridge
-

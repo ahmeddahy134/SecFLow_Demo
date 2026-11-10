@@ -79,22 +79,16 @@ async def lifespan(app: FastAPI):
     print(f"📦 Python version: {sys.version}", flush=True)
     print(f"🌐 PORT environment variable: {os.getenv('PORT', 'not set')}", flush=True)
     
-    # CRITICAL: Yield immediately - server MUST be ready NOW
+    # Initialize database before marking server ready
+    if init_db:
+        try:
+            print("📊 Initializing database and tables...", flush=True)
+            init_db()
+        except Exception as e:
+            print(f"⚠️ Warning: Database initialization failed: {e}", flush=True)
+    
     print("✅ Application startup complete - server is ready!", flush=True)
     yield
-    
-    # Initialize database in background AFTER server is ready
-    if init_db:
-        def init_db_background():
-            try:
-                print("📊 Initializing database in background...", flush=True)
-                init_db()
-            except Exception as e:
-                print(f"⚠️ Warning: Database initialization failed: {e}", flush=True)
-        
-        import threading
-        db_thread = threading.Thread(target=init_db_background, daemon=True)
-        db_thread.start()
     
     # Shutdown
     print("🛑 Shutting down E-commerce Store Backend...", flush=True)
@@ -254,6 +248,22 @@ if os.path.exists("uploads"):
 async def health_check():
     return {
         "status": "healthy",
+        "service": "ecommerce-store-backend",
+        "version": "1.0.0"
+    }
+
+@app.get("/health/live")
+async def health_live():
+    return {
+        "status": "alive",
+        "service": "ecommerce-store-backend",
+        "version": "1.0.0"
+    }
+
+@app.get("/health/ready")
+async def health_ready():
+    return {
+        "status": "ready",
         "service": "ecommerce-store-backend",
         "version": "1.0.0"
     }

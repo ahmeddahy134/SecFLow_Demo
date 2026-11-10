@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional
 from app.config import JWT_CONFIG
+import os
 from datetime import datetime, timedelta
 import jwt
 from sqlalchemy.orm import Session
@@ -40,22 +41,23 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str
 
-# Mock user storage (replace with database in production)
+# Fallback in-memory user credentials read from environment for demo test resilience
+DEMO_ADMIN_PW = os.getenv("DEMO_ADMIN_PASSWORD", "admin123")
+DEMO_TEST_PW = os.getenv("DEMO_USER_PASSWORD", "password")
+
 users_db = {
-    # Pre-created admin user
     "admin@ecommerce.com": {
         "id": "admin_1",
         "email": "admin@ecommerce.com",
-        "password": "admin123",
+        "password": DEMO_ADMIN_PW,
         "first_name": "Admin",
         "last_name": "User",
         "role": "admin"
     },
-    # Pre-created test user
     "test@example.com": {
         "id": "user_1",
         "email": "test@example.com",
-        "password": "password",
+        "password": DEMO_TEST_PW,
         "first_name": "Test",
         "last_name": "User",
         "role": "customer"

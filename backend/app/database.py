@@ -5,6 +5,8 @@ import os
 
 # Database URL
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@postgres:5432/ecommerce")
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 # Create engine with connection pool settings for Cloud Run
 # Use echo=False to avoid logging all SQL queries
@@ -111,20 +113,22 @@ def init_db():
                     db.add(product)
             
             if db.query(User).count() == 0:
-                # Add sample users with hashed passwords
+                # Add sample users with hashed passwords read from environment
+                admin_pw = os.getenv("DEMO_ADMIN_PASSWORD", "admin123")
+                user_pw = os.getenv("DEMO_USER_PASSWORD", "password")
                 sample_users = [
                     {
                         "id": "admin_1",
                         "email": "admin@ecommerce.com",
                         "name": "Admin User",
-                        "password": "admin123",
+                        "password": admin_pw,
                         "role": "admin"
                     },
                     {
                         "id": "user_1", 
                         "email": "test@example.com",
                         "name": "Test User",
-                        "password": "password",
+                        "password": user_pw,
                         "role": "customer"
                     }
                 ]

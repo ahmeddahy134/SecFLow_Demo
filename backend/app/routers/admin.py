@@ -477,11 +477,7 @@ async def initialize_database(db: Session = Depends(get_db)):
         return {
             "message": "Database initialized successfully",
             "admin_created": True,
-            "products_created": len(sample_products),
-            "admin_credentials": {
-                "email": "admin@example.com",
-                "password": "admin123"
-            }
+            "products_created": len(sample_products)
         }
         
     except Exception as e:
