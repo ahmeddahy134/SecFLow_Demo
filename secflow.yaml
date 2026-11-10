@@ -1,0 +1,28 @@
+# SecFlow Canonical Deployment Manifest (v1.0.0)
+# E-Commerce Customer Demo Workload
+version: "1.0"
+project:
+  name: "ecommerce-store"
+  environment: "demo"
+runtime:
+  profile: "ecs-ec2"
+  region: "eu-north-1"
+
+components:
+  - name: "web"
+    type: "web"
+    build:
+      context: "."
+      dockerfile: "Dockerfile"
+    port: 8080
+    cpu: 256
+    memory: 512
+    desired_count: 1
+    health_check_path: "/health"
+    routing_path_pattern: "/*"
+    env:
+      PORT: "8080"
+      ENVIRONMENT: "production"
+
+database:
+  profile: "none"
